@@ -30,6 +30,8 @@ jobs:
           sudo apt-get update -qy
           sudo apt-get install -y git clang-10 clang++-10 binutils
           sudo apt-get install -y python3
+          python3 -m pip install --upgrade pip importlib-metadata
+          python3 -m pip install setuptools==45.2.0
           git clone https://github.com/alliedmodders/ambuild.git
           cd ambuild
           pip install .
