@@ -92,8 +92,8 @@ jobs:
       - name: Create zip from artifact
       run: zip -r ${GITHUB_WORKSPACE}/compile.zip compile
 
-    - name: Upload release
-      uses: softprops/action-gh-release@v1
-      with:
-        tag_name: v${{ needs.build.outputs.buildnumber }}
-        files: compile.zip
+      - name: Upload release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ needs.build.outputs.buildnumber }}
+          files: compile.zip
