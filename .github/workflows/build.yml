@@ -80,8 +80,14 @@ jobs:
     runs-on: ubuntu-20.04
 
     steps:
+      - name: Download build artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: build_plugin
+          path: .
+
       - name: Upload release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: v${{ needs.build.outputs.buildnumber }}
-          files: build/package/${{ github.workspace }}.zip
+          files: ${{ github.workspace }}.zip
