@@ -43,6 +43,7 @@ jobs:
           cd ../..
           git clone https://github.com/pisex/SchemaEntity.git
           cd ${{ github.workspace }}
+          
       - name: Configure and build plugin
         run: |
           mkdir build
@@ -52,6 +53,7 @@ jobs:
 
       - name: Create archive
         run: |
+          mkdir -p build/package
           cd build/package
           zip -r ${{ github.workspace }}.zip addons
 
@@ -60,6 +62,7 @@ jobs:
         with:
           name: addons
           path: build/package/${{ github.workspace }}.zip
+
   release:
     needs: build
     runs-on: ubuntu-20.04
@@ -75,7 +78,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            ${{ github.workspace }}/build/package/${{ github.workspace }}.zip
+            build/package/${{ github.workspace }}.zip
           token: ${{ secrets.GITHUB_TOKEN }}
           tag_name: ${{ github.ref }}
           release_name: ${{ github.ref }}
