@@ -78,14 +78,17 @@ jobs:
     permissions:
       contents: write
     runs-on: ubuntu-20.04
-
+    
     steps:
       - name: Download build artifact
         uses: actions/download-artifact@v3
         with:
           name: compile
           path: .
-    
+
+      - name: Rename artifact
+        run: mv compile ${GITHUB_WORKSPACE}/compile.zip
+
       - name: Upload release
         uses: softprops/action-gh-release@v1
         with:
