@@ -51,14 +51,8 @@ jobs:
           python3 ../configure.py -s cs2 --targets x86_64 --enable-optimize --hl2sdk-manifests=./hl2sdk-manifests --mms_path=$MMS_PATH --hl2sdk-root=$HL2SDK_ROOT
           ambuild
 
-      - name: Check contents before archive
-        run: |
-          echo "Checking build/package contents:"
-          ls -lh build/package/
-
       - name: Create archive
         run: |
-          mkdir -p build/package
           cd build/package
           zip -r ${{ github.workspace }}.zip addons
 
@@ -73,22 +67,12 @@ jobs:
     runs-on: ubuntu-20.04
 
     steps:
-      - name: Download build artifacts
-        uses: actions/download-artifact@v3
-        with:
-          name: addons
-
-      - name: Check contents after download
-        run: |
-          echo "Checking downloaded contents:"
-          ls -lh
-
       - name: Upload release assets
         id: release
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            ${{ github.workspace }}.zip
+            build/package/${{ github.workspace }}.zip
           token: ${{ secrets.GITHUB_TOKEN }}
           tag_name: ${{ github.ref }}
           name: ${{ github.ref }}
