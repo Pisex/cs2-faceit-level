@@ -83,5 +83,5 @@ jobs:
       - name: Upload release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: v${{ needs.setup.outputs.buildnumber }}
-          files: ${{ github.workspace }}.zip
+          tag_name: v${{ needs.build.outputs.buildnumber }}
+          files: build/package/${{ github.workspace }}.zip
