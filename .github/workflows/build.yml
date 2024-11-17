@@ -29,9 +29,8 @@ jobs:
           export DEBIAN_FRONTEND=noninteractive
           sudo apt-get update -qy
           sudo apt-get install -y git clang-10 clang++-10 binutils
-          sudo apt-get install -y python3.10 python3-pip
-          python3 -m pip install --upgrade pip setuptools wheel
-          python3 -m pip install git+https://github.com/alliedmodders/ambuild
+          sudo apt-get install -y python3
+          pip install git+https://github.com/alliedmodders/ambuild
           mkdir external
           cd external
           git clone --recursive --branch master --single-branch https://github.com/alliedmodders/metamod-source.git
