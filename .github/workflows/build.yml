@@ -70,9 +70,6 @@ jobs:
         with:
           name: addons
 
-      - name: Debug release event
-        run: echo "Release upload_url: ${{ github.event.release.upload_url }}"
-
       - name: Upload release assets
         uses: actions/upload-release-asset@v1
         env:
