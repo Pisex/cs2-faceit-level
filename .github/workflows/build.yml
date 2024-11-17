@@ -53,13 +53,13 @@ jobs:
       - name: Create archive
         run: |
           cd build/package
-          tar -czvf addons.tar.gz addons
+          zip -r ${{ github.workspace }}.zip addons
 
       - name: Upload archive to artifact
         uses: actions/upload-artifact@v3
         with:
           name: addons
-          path: build/package/addons.tar.gz
+          path: build/package/${{ github.workspace }}.zip
   release:
     needs: build
     runs-on: ubuntu-20.04
@@ -71,11 +71,11 @@ jobs:
           name: addons
 
       - name: Upload release assets
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        id: release
+        uses: softprops/action-gh-release@v1
         with:
-          upload_url: ${{ github.event.release.upload_url }}
-          asset_path: build/package/addons.tar.gz
-          asset_name: addons.tar.gz
-          asset_content_type: application/gzip
+          files: |
+            ${{ github.workspace }}/build/package/${{ github.workspace }}.zip
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag_name: ${{ github.ref }}
+          release_name: ${{ github.ref }}
