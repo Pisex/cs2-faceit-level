@@ -59,20 +59,20 @@ jobs:
       - name: Upload archive to artifact
         uses: actions/upload-artifact@v3
         with:
-          name: addons
+          name: build_plugin
           path: ${{ github.workspace }}.zip
 
   release:
     needs: build
+    permissions:
+      contents: write
     runs-on: ubuntu-20.04
 
     steps:
-      - name: Upload release assets
-        id: release
+      - name: Upload release
         uses: softprops/action-gh-release@v1
         with:
-          files: |
-            build/package/${{ github.workspace }}.zip
+          files: ${{ needs.build.outputs.artifact }}
           token: ${{ secrets.GITHUB_TOKEN }}
           tag_name: ${{ github.ref }}
-          name: ${{ github.ref }}
+          release_name: ${{ github.ref }}
