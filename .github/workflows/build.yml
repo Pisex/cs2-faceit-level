@@ -78,22 +78,23 @@ jobs:
     permissions:
       contents: write
     runs-on: ubuntu-20.04
-
+  
     steps:
       - name: Download build artifact
         uses: actions/download-artifact@v3
         with:
           name: compile
           path: .
-
+  
       - name: List files in directory
         run: ls -la
-    
-      - name: Create zip from artifact
-        run: zip -r ${GITHUB_WORKSPACE}/compile.zip compile
-
+  
+      - name: Find downloaded artifact
+        id: find_artifact
+        run: echo "ARTIFACT=$(ls | grep '\.zip$')" >> $GITHUB_ENV
+  
       - name: Upload release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: v${{ needs.build.outputs.buildnumber }}
-          files: compile.zip
+          files: ${{ env.ARTIFACT }}
