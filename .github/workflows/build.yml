@@ -1,0 +1,76 @@
+name: Build AMBuild Plugin
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  release:
+    types:
+      - created
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+
+    env:
+      HL2SDK_ROOT: "${{ github.workspace }}/external"
+      MMS_PATH: "${{ github.workspace }}/external/metamod-source"
+      MANIFEST_PATH: "${{ github.workspace }}/external/metamod-source/hl2sdk-manifests"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up dependencies
+        run: |
+          export DEBIAN_FRONTEND=noninteractive
+          sudo apt-get update -qy
+          sudo apt-get install -y git clang-10 clang++-10 binutils
+          sudo apt-get install -y python3.10 python3-pip
+          python3 -m pip install --upgrade pip setuptools wheel
+          python3 -m pip install git+https://github.com/alliedmodders/ambuild
+          mkdir external
+          cd external
+          git clone --recursive --branch master --single-branch https://github.com/alliedmodders/metamod-source.git
+          git clone --recursive --branch cs2 --single-branch https://github.com/alliedmodders/hl2sdk.git hl2sdk-cs2
+          cd ..
+
+      - name: Configure and build plugin
+        run: |
+          mkdir build
+          cd build
+          python3 ../configure.py -s cs2 --targets x86_64 --enable-optimize --hl2sdk-manifests=./hl2sdk-manifests
+          ambuild
+
+      - name: Create archive
+        run: |
+          cd build/package
+          tar -czvf addons.tar.gz addons
+
+      - name: Upload archive to artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: addons
+          path: build/package/addons.tar.gz
+  release:
+    needs: build
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: addons
+
+      - name: Upload release assets
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: build/package/addons.tar.gz
+          asset_name: addons.tar.gz
+          asset_content_type: application/gzip
