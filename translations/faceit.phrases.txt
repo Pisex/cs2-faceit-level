@@ -1,0 +1,13 @@
+"Phrases"
+{
+    "Faceit_Enable"
+    {
+        "ru"        " {GREEN}[FACEIT]{DEFAULT} Вы успешно {GREEN}включили{DEFAULT} отображение уровня faceit"
+        "en"        " {GREEN}[FACEIT]{DEFAULT} You have successfully {GREEN}enabled{DEFAULT} faceit level display"
+    }
+    "Faceit_Disable"
+    {
+        "ru"        " {GREEN}[FACEIT]{DEFAULT} Вы успешно {RED}выключили{DEFAULT} отображение уровня faceit"
+        "en"        " {GREEN}[FACEIT]{DEFAULT} You have successfully {RED}disabled{DEFAULT} faceit level display"
+    }
+}
