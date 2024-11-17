@@ -90,7 +90,7 @@ jobs:
         run: ls -la
     
       - name: Create zip from artifact
-      run: zip -r ${GITHUB_WORKSPACE}/compile.zip compile
+        run: zip -r ${GITHUB_WORKSPACE}/compile.zip compile
 
       - name: Upload release
         uses: softprops/action-gh-release@v1
