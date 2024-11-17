@@ -87,7 +87,7 @@ jobs:
           path: .
     
       - name: Rename artifact
-        run: mv compile/* ${GITHUB_WORKSPACE}/compile.zip
+        run: mv compile.zip ${GITHUB_WORKSPACE}/compile.zip
     
       - name: Upload release
         uses: softprops/action-gh-release@v1
