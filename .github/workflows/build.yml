@@ -16,8 +16,6 @@ jobs:
     permissions:
       contents: write
     runs-on: ubuntu-20.04
-    outputs:
-      buildnumber: ${{ steps.buildnumber.outputs.build_number }}
 
     env:
       HL2SDK_ROOT: "${{ github.workspace }}/external"
@@ -25,13 +23,6 @@ jobs:
       MANIFEST_PATH: "${{ github.workspace }}/external/metamod-source/hl2sdk-manifests"
 
     steps:
-      - name: Generate build number
-        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-        id: buildnumber
-        uses: onyxmueller/build-tag-number@v1
-        with:
-          token: ${{secrets.github_token}}
-
       - name: Checkout code
         uses: actions/checkout@v3
 
@@ -96,5 +87,5 @@ jobs:
       - name: Upload release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: v${{ needs.build.outputs.buildnumber }}
+          tag_name: ${{ github.event.head_commit.message }}
           files: ${{ env.ARTIFACT }}

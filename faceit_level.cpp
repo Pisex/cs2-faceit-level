@@ -28,6 +28,8 @@ bool g_bUseCSGO;
 bool g_bFaceitLevel[64];
 int g_iFaceitLevel[64];
 
+bool g_bDefaultStatus;
+
 std::map<int, int> g_iLevels;
 
 KeyValues* g_hKVData;
@@ -40,11 +42,11 @@ class PlayerFaceitFetcher
 public:
     PlayerFaceitFetcher(uint64 steamID) : m_steamID(steamID), m_faceitReady(false) {}
 
-    int GetPlayerFaceit()
+    int GetPlayerFaceit(bool bCSGO = false)
     {
         m_faceitReady = false;
         char szURL[512];
-        g_SMAPI->Format(szURL, sizeof(szURL), "https://open.faceit.com/data/v4/players?game=cs2&game_player_id=%llu", m_steamID);
+        g_SMAPI->Format(szURL, sizeof(szURL), "https://open.faceit.com/data/v4/players?game=%s&game_player_id=%llu", bCSGO?"csgo":"cs2", m_steamID);
         auto hReq = g_http->CreateHTTPRequest(k_EHTTPMethodGET, szURL);
 		char szHeader[128];
 		g_SMAPI->Format(szHeader, sizeof(szHeader), "Bearer %s", g_szFaceitKey);
@@ -91,7 +93,7 @@ private:
 						{
 							m_faceitLevel = jsonResponse["games"]["cs2"]["skill_level"].get<int>();
 						}
-						else if(g_bUseCSGO && jsonResponse["games"].contains("csgo") && !jsonResponse["games"]["csgo"].is_null() && jsonResponse["games"]["csgo"].contains("skill_level") && !jsonResponse["games"]["csgo"]["skill_level"].is_null())
+						else if(jsonResponse["games"].contains("csgo") && !jsonResponse["games"]["csgo"].is_null() && jsonResponse["games"]["csgo"].contains("skill_level") && !jsonResponse["games"]["csgo"]["skill_level"].is_null())
 						{
 							m_faceitLevel = jsonResponse["games"]["csgo"]["skill_level"].get<int>();
 						}
@@ -123,7 +125,12 @@ private:
 int GetPlayerFaceit(uint64 iSteamID)
 {
     PlayerFaceitFetcher fetcher(iSteamID);
-    return fetcher.GetPlayerFaceit();
+	int iFaceitLevel = fetcher.GetPlayerFaceit();
+	if(iFaceitLevel <= 0 && g_bUseCSGO)
+	{
+		iFaceitLevel = fetcher.GetPlayerFaceit(true);
+	}
+	return iFaceitLevel;
 }
 
 CGameEntitySystem* GameEntitySystem()
@@ -142,11 +149,11 @@ bool GetClientFaceitStatus(int iSlot)
 {
 	CCSPlayerController* pController = CCSPlayerController::FromSlot(iSlot);
 	if (!pController)
-		return true;
+		return g_bDefaultStatus;
 	uint32 m_steamID = pController->m_steamID();
 	if(m_steamID == 0)
-		return true;
-	return g_hKVData->GetBool(std::to_string(m_steamID).c_str(), true);
+		return g_bDefaultStatus;
+	return g_hKVData->GetBool(std::to_string(m_steamID).c_str(), g_bDefaultStatus);
 }
 
 void SaveClientFaceitStatus(int iSlot)
@@ -161,6 +168,21 @@ void SaveClientFaceitStatus(int iSlot)
 	g_hKVData->SaveToFile(g_pFullFileSystem, "addons/data/faceit_data.ini");
 }
 
+std::vector<std::string> split(std::string s, std::string delimiter) {
+    size_t pos_start = 0, pos_end, delim_len = delimiter.length();
+    std::string token;
+    std::vector<std::string> res;
+
+    while ((pos_end = s.find(delimiter, pos_start)) != std::string::npos) {
+        token = s.substr (pos_start, pos_end - pos_start);
+        pos_start = pos_end + delim_len;
+        res.push_back (token);
+    }
+
+    res.push_back (s.substr (pos_start));
+    return res;
+}
+
 void LoadConfig()
 {
 	KeyValues* hKv = new KeyValues("Faceit");
@@ -171,11 +193,13 @@ void LoadConfig()
 		g_pUtils->ErrorLog("[FACEIT LEVEL] Failed to load %s", pszPath);
 		return;
 	}
-	
+
+	g_bDefaultStatus = hKv->GetBool("default_status", true);
 	g_szFaceitKey = hKv->GetString("faceit_key", "");
 	g_bUseCSGO = hKv->GetBool("use_csgo", false);
 	const char* szCommand = hKv->GetString("command", "!faceit");
-	g_pUtils->RegCommand(g_PLID, {}, {szCommand}, [](int iSlot, const char* szContent)
+	std::vector<std::string> vecCommands = split(szCommand, ",");
+	g_pUtils->RegCommand(g_PLID, {}, vecCommands, [](int iSlot, const char* szContent)
 	{
 		if(g_bFaceitLevel[iSlot])
 		{
@@ -350,7 +374,7 @@ const char* Faceit_Level::GetLicense()
 
 const char* Faceit_Level::GetVersion()
 {
-	return "1.0";
+	return "1.1";
 }
 
 const char* Faceit_Level::GetDate()
