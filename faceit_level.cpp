@@ -328,6 +328,16 @@ void Faceit_Level::AllPluginsLoaded()
 		g_pSkinChanger->OnSetCoin(g_PLID, [](int iSlot, int iTeam, int& iCoin)
 		{
 			if(g_iFaceitLevel[iSlot] > 0 && g_bFaceitLevel[iSlot]) return false;
+			else {
+				for (int i = 1; i <= 10; i++)
+				{
+					if (g_iLevels[i] == iCoin)
+					{
+						iCoin = 0;
+						return false;
+					}
+				}
+			}
 			return true;
 		});
 	}
@@ -374,7 +384,7 @@ const char* Faceit_Level::GetLicense()
 
 const char* Faceit_Level::GetVersion()
 {
-	return "1.1";
+	return "1.1.1";
 }
 
 const char* Faceit_Level::GetDate()
