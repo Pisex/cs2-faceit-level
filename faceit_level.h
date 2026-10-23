@@ -12,14 +12,16 @@
 #include <deque>
 #include <functional>
 #include <utlstring.h>
-#include <KeyValues.h>
+#include <keyvalues.h>
 #include "CCSPlayerController.h"
 #include "include/menus.h"
 #include "include/skinchanger_api.h"
 
-class Faceit_Level final : public ISmmPlugin, public IMetamodListener
+class Faceit_Level final : public ISmmPlugin, public IMetamodListener, public IServerListener
 {
 public:
+	void GameServerSteamAPIActivated() override;
+
 	bool Load(PluginId id, ISmmAPI* ismm, char* error, size_t maxlen, bool late);
 	bool Unload(char* error, size_t maxlen);
 	void AllPluginsLoaded();

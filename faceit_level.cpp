@@ -13,7 +13,6 @@ CGameEntitySystem* g_pGameEntitySystem = nullptr;
 CEntitySystem* g_pEntitySystem = nullptr;
 CGlobalVars *gpGlobals = nullptr;
 
-CSteamGameServerAPIContext g_steamAPI;
 ISteamHTTP *g_http = nullptr;
 
 IPlayersApi* g_pPlayers;
@@ -35,7 +34,6 @@ std::map<int, int> g_iLevels;
 KeyValues* g_hKVData;
 std::map<std::string, std::string> g_vecPhrases;
 
-SH_DECL_HOOK0_void(IServerGameDLL, GameServerSteamAPIActivated, SH_NOATTRIB, 0);
 
 class PlayerFaceitFetcher
 {
@@ -131,11 +129,6 @@ int GetPlayerFaceit(uint64 iSteamID)
 		iFaceitLevel = fetcher.GetPlayerFaceit(true);
 	}
 	return iFaceitLevel;
-}
-
-CGameEntitySystem* GameEntitySystem()
-{
-	return g_pUtils->GetCGameEntitySystem();
 }
 
 void StartupServer()
@@ -257,10 +250,8 @@ bool LoadData()
 
 void Faceit_Level::OnGameServerSteamAPIActivated()
 {
-	g_steamAPI.Init();
-	g_http = g_steamAPI.SteamHTTP();
-
-	RETURN_META(MRES_IGNORED);
+	g_http = SteamGameServerHTTP();
+	return;
 }
 
 bool Faceit_Level::Load(PluginId id, ISmmAPI* ismm, char* error, size_t maxlen, bool late)
@@ -272,8 +263,8 @@ bool Faceit_Level::Load(PluginId id, ISmmAPI* ismm, char* error, size_t maxlen, 
 	GET_V_IFACE_ANY(GetServerFactory, g_pSource2Server, ISource2Server, SOURCE2SERVER_INTERFACE_VERSION);
 	GET_V_IFACE_CURRENT(GetEngineFactory, engine, IVEngineServer2, SOURCE2ENGINETOSERVER_INTERFACE_VERSION);
 	GET_V_IFACE_ANY(GetEngineFactory, g_pFullFileSystem, IFileSystem, FILESYSTEM_INTERFACE_VERSION);
+	GET_V_IFACE_CURRENT(GetEngineFactory, g_pGameResourceServiceServer, IGameResourceService, GAMERESOURCESERVICESERVER_INTERFACE_VERSION);
 	
-	SH_ADD_HOOK(IServerGameDLL, GameServerSteamAPIActivated, g_pSource2Server, SH_MEMBER(this, &Faceit_Level::OnGameServerSteamAPIActivated), false);
 
 	g_SMAPI->AddListener( this, this );
 
@@ -293,7 +284,7 @@ bool Faceit_Level::Load(PluginId id, ISmmAPI* ismm, char* error, size_t maxlen, 
 
 bool Faceit_Level::Unload(char *error, size_t maxlen)
 {
-	SH_REMOVE_HOOK_MEMFUNC(IServerGameDLL, GameServerSteamAPIActivated, g_pSource2Server, this, &Faceit_Level::OnGameServerSteamAPIActivated, false);
+	if(g_pUtils) g_pUtils->ClearAllHooks(g_PLID);
 
 	ConVar_Unregister();
 	
@@ -313,6 +304,8 @@ void Faceit_Level::AllPluginsLoaded()
 		engine->ServerCommand(sBuffer.c_str());
 		return;
 	}
+	g_pUtils->AddServerListener(g_PLID, this);
+
 	g_pPlayers = (IPlayersApi *)g_SMAPI->MetaFactory(PLAYERS_INTERFACE, &ret, NULL);
 	if (ret == META_IFACE_FAILED)
 	{
@@ -344,7 +337,7 @@ void Faceit_Level::AllPluginsLoaded()
 	LoadConfig();
 	LoadTranslations();
 	LoadData();
-	g_pUtils->StartupServer(g_PLID, StartupServer);
+	g_pUtils->StartupServer(g_PLID, ::StartupServer);
 	g_pPlayers->HookOnClientAuthorized(g_PLID, [](int iSlot, uint64 iSteamID64)
 	{
 		g_bFaceitLevel[iSlot] = GetClientFaceitStatus(iSlot);
@@ -415,4 +408,9 @@ const char* Faceit_Level::GetName()
 const char* Faceit_Level::GetURL()
 {
 	return "https://discord.gg/g798xERK5Y";
+}
+
+void Faceit_Level::GameServerSteamAPIActivated()
+{
+	OnGameServerSteamAPIActivated();
 }
